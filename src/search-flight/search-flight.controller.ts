@@ -1,6 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  UsePipes,
+  ValidationPipe,
+  BadRequestException,
+} from '@nestjs/common';
 import { SearchFlightService } from './search-flight.service';
-import { IsDateString } from 'class-validator';
+import { RoundtripDto } from './dto/roundtrip.dto';
 
 @Controller('search-flight')
 export class SearchFlightController {
@@ -18,14 +25,35 @@ export class SearchFlightController {
     Returns all ROUNDTRIP flights which the dates given
   */
 
-/* 
+  /* 
   Error cases:
-    1) Dates are not in correct format 
-    2) Returning is earlier than departing
+    1) Dates are not in correct format (Done)
+    2) Returning is earlier than departing 
     3) ****Check SkyScanner docs**** Out of bounds value for the API (departing: only today onwards)
 */
- @Get('roundtrip')
- findRoundtrip(@Query('departing') departing: string, @Query('returning') returning: string, @Query('origin') origin: string){  
-  return this.searchFlightService.findRoundtrip(departing, returning, origin);
- }
+  @Get('roundtrip')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  findRoundtrip(@Query() query: RoundtripDto) {
+    // Exception raised if the returning date is earlier than departure date
+    if (new Date(query.returning) < new Date(query.departing)) {
+      throw new BadRequestException(
+        'Returning date must be after departing date',
+      );
+    }
+
+    // Exception raised if departure date is in the past. RapidAPI requires future dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (new Date(query.departing) < today) {
+      throw new BadRequestException(
+        'Departure date must be today or in the future',
+      );
+    }
+
+    return this.searchFlightService.findRoundtrip(
+      query.departing,
+      query.returning,
+      query.origin,
+    );
+  }
 }
