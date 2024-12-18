@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 
-//Helper function
-function groupBy(flights: [Object]) {
-  flights.forEach((element) => {});
-}
-
 @Injectable()
 export class SearchFlightService {
   /*
