@@ -10,4 +10,7 @@ export class RoundtripDto {
 
   @IsString()
   origin: string;
+
+  @IsString()
+  destination: string;
 }

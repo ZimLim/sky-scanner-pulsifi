@@ -1,20 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 
+//Helper function
+function groupBy(flights: [Object]) {
+  flights.forEach((element) => {});
+}
+
 @Injectable()
 export class SearchFlightService {
   /*
     Needed SkyScanner API params:
       1) fromEntityId: string (required)
-      2) departDate (YYYY-MM-DD)
-      3) returnDate (YYYY-MM-DD)
+      2) toEntityId: string
+      3) departDate (YYYY-MM-DD)
+      4) returnDate (YYYY-MM-DD)
   */
-  findRoundtrip(departDate: string, returnDate: string, origin: string) {
-    const url = `https://sky-scanner3.p.rapidapi.com/flights/search-roundtrip?fromEntityId=${origin}&departDate=${departDate}&returnDate=${returnDate}`;
+  findRoundtrip(
+    departDate: string,
+    returnDate: string,
+    origin: string,
+    destionation: string,
+  ) {
+    const url = `https://sky-scanner3.p.rapidapi.com/flights/search-roundtrip?fromEntityId=${origin}&toEntityId=${destionation}&departDate=${departDate}&returnDate=${returnDate}&sort=cheapest_first`;
     const api_key = process.env.fastApiKey;
 
-    // Flights are sorted by **rawPrice** from cheapest to most expensive by default
-    const ret = axios
+    const req = axios
       .get(url, {
         // Headers required by RapidAPI
         headers: {
@@ -23,11 +33,31 @@ export class SearchFlightService {
         },
       })
       .then((response) => {
-        return response.data.data.everywhereDestination.results;
+        const itineraries = response.data.data.itineraries;
+        let ret = {
+          data: [],
+        };
+        itineraries.forEach((itinerary) => {
+          const price = itinerary.price.raw;
+          const departure = itinerary.legs[0].departure;
+          const full_info = itinerary;
+
+          let information = {
+            price,
+            departure,
+            full_info,
+          };
+
+          ret.data.push(information);
+        });
+        const sorted_flights = ret.data.sort((a, b) => a.price - b.price);
+
+        return sorted_flights;
       })
       .catch((err) => {
         return { status: err.status, message: err.message };
       });
-    return ret;
+
+    return req;
   }
 }
