@@ -55,6 +55,7 @@ export class SearchFlightController {
       query.returning,
       query.origin,
       query.destination,
+      query.grouped
     );
   }
 }

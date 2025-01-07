@@ -1,4 +1,4 @@
-import { IsDateString, IsString } from 'class-validator';
+import { IsBoolean, IsDateString, IsString } from 'class-validator';
 
 export class RoundtripDto {
   // IsDateString enforces YYYY-MM-DD date format
@@ -13,4 +13,7 @@ export class RoundtripDto {
 
   @IsString()
   destination: string;
+
+  @IsString()
+  grouped?: string;
 }
